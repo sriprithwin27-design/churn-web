@@ -349,7 +349,7 @@ While the current project demonstrates a complete end-to-end workflow, there are
 
 ## 1. Clone Repository
 
-git clone https://github.com/your-username/churn-web-app.git
+git clone https://github.com/sriprithwin27-design/churn-web-app.git
 
 ## 2. Navigate to Project Folder
 
