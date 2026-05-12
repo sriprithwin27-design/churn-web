@@ -323,13 +323,25 @@ While the current project demonstrates a complete end-to-end workflow, there are
 
 # Screenshots
 
-Add screenshots of your application here:
+[Open Screenshots Folder](Screenshots/)
+
+---
 
 ### Homepage
-![Homepage](screenshots/homepage.png)
 
-### Prediction Result
-![Result](screenshots/result.png)
+![Homepage](Screenshots/homepage.png)
+
+---
+
+### Prediction Result 1
+
+![Result 1](Screenshots/result1.png)
+
+---
+
+### Prediction Result 2
+
+![Result 2](Screenshots/result2.png)
 
 ---
 
