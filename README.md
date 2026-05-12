@@ -285,3 +285,74 @@ churn-web-app/
 │   └── churn.csv
 │
 ├── venv/
+
+
+# Key Learnings
+
+This project provided hands-on experience in building an end-to-end machine learning system, going beyond just model development and focusing on real-world application and deployment thinking.
+
+Some of the key learnings include:
+
+- Understanding the complete machine learning pipeline from data preprocessing to deployment
+- Applying feature engineering techniques such as one-hot encoding for categorical variables
+- Training and evaluating classification models using Logistic Regression
+- Serializing models using pickle for reuse in production environments
+- Building backend systems using Flask to serve machine learning predictions
+- Handling real-world issues such as file path errors, data mismatches, and environment setup problems
+- Integrating machine learning outputs into a user-friendly web interface
+- Translating model predictions into business-friendly insights and recommendations
+
+# Future Improvements
+
+While the current project demonstrates a complete end-to-end workflow, there are several ways it can be improved and expanded:
+
+- Deploy the application using cloud platforms such as Render or Railway for public access
+- Replace Logistic Regression with more advanced models like Random Forest, XGBoost, or Gradient Boosting
+- Add probability scores to show churn likelihood instead of only binary output
+- Integrate Power BI or Tableau dashboards for deeper business analytics
+- Store user predictions in a database for historical analysis
+- Improve frontend using React or advanced CSS frameworks
+- Add authentication system for multi-user access
+- Convert Flask backend into a REST API for scalability
+- Containerize the application using Docker for deployment consistency
+
+# Screenshots
+
+Below are sample visuals of the application interface.
+
+> Add your actual images inside a folder named `screenshots/` in your project.
+
+### Homepage
+
+![Homepage](screenshots/homepage.png)
+
+### Prediction Result Page
+
+![Result](screenshots/result.png)
+
+# How to Run the Project
+
+Follow these steps to run the project locally:
+
+## 1. Clone the repository
+
+```bash
+git clone https://github.com/your-username/churn-web-app.git
+
+---
+
+# Author
+
+```markdown id="auth1"
+# Author
+
+Developed by **[Your Name]**
+
+This project was built as part of a self-initiated data science portfolio to demonstrate end-to-end machine learning, backend development, and deployment-ready analytics system design.
+
+Focus areas:
+- Machine Learning
+- Data Analytics
+- Backend Development (Flask)
+- Business Intelligence Thinking
+- End-to-End Project Engineering
