@@ -285,7 +285,7 @@ churn-web-app/
 │   └── churn.csv
 │
 ├── venv/
-
+```
 ---
 
 # Key Learnings
@@ -309,61 +309,83 @@ Some of the key learnings include:
 
 While the current project demonstrates a complete end-to-end workflow, there are several ways it can be improved and expanded:
 
-- Deploy the application using cloud platforms such as Render or Railway for public access
-- Replace Logistic Regression with more advanced models like Random Forest, XGBoost, or Gradient Boosting
-- Add probability scores to show churn likelihood instead of only binary output
-- Integrate Power BI or Tableau dashboards for deeper business analytics
-- Store user predictions in a database for historical analysis
-- Improve frontend using React or advanced CSS frameworks
-- Add authentication system for multi-user access
-- Convert Flask backend into a REST API for scalability
-- Containerize the application using Docker for deployment consistency
+- Deploy the application using cloud platforms such as Render or Railway
+- Replace Logistic Regression with advanced models like Random Forest or XGBoost
+- Add probability scores instead of binary predictions
+- Integrate Power BI dashboards for deeper insights
+- Store predictions in a database for analysis
+- Improve frontend using React or modern UI frameworks
+- Add authentication system for users
+- Convert backend into REST API
+- Containerize the application using Docker
 
 ---
 
 # Screenshots
 
-Below are sample visuals of the application interface.
-
-> Add your actual images inside a folder named `screenshots/` in your project.
-
----
+Add screenshots of your application here:
 
 ### Homepage
-
 ![Homepage](screenshots/homepage.png)
 
----
-
-### Prediction Result Page
-
+### Prediction Result
 ![Result](screenshots/result.png)
 
 ---
 
 # How to Run the Project
 
-Follow these steps to run the project locally:
+## 1. Clone Repository
 
-## 1. Clone the repository
-
-```bash
 git clone https://github.com/your-username/churn-web-app.git
+
+## 2. Navigate to Project Folder
+
+cd churn-web-app
+
+
+## 3. Create Virtual Environment
+
+python -m venv venv
+
+
+## 4. Activate Environment
+
+Mac/Linux:
+
+source venv/bin/activate
+
+
+Windows:
+
+venv\Scripts\activate
+
+
+## 5. Install Dependencies
+
+pip install -r requirements.txt
+
+
+## 6. Run Application
+
+python app.py
+
+
+## 7. Open Browser
+
+http://127.0.0.1:5000
 
 ---
 
 # Author
 
-```markdown id="auth1"
-# Author
+Developed by **Sriprithwin Sivakumar**
 
-Developed by **[Your Name]**
+This project was built as part of a self-initiated data science portfolio project to demonstrate end-to-end machine learning, backend development, and deployment-ready analytics systems.
 
-This project was built as part of a self-initiated data science portfolio to demonstrate end-to-end machine learning, backend development, and deployment-ready analytics system design.
-
-Focus areas:
+Focus Areas:
 - Machine Learning
 - Data Analytics
 - Backend Development (Flask)
 - Business Intelligence Thinking
-- End-to-End Project Engineering
+- End-to-End System Design
