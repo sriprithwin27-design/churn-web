@@ -274,6 +274,7 @@ The project additionally demonstrated how predictive analytics can be translated
 ```plaintext
 churn-web-app/
 │
+├── Screenshots
 ├── app.py
 ├── model.py
 ├── model.pkl
