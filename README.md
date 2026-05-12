@@ -286,6 +286,7 @@ churn-web-app/
 │
 ├── venv/
 
+---
 
 # Key Learnings
 
@@ -302,6 +303,8 @@ Some of the key learnings include:
 - Integrating machine learning outputs into a user-friendly web interface
 - Translating model predictions into business-friendly insights and recommendations
 
+---
+
 # Future Improvements
 
 While the current project demonstrates a complete end-to-end workflow, there are several ways it can be improved and expanded:
@@ -316,19 +319,27 @@ While the current project demonstrates a complete end-to-end workflow, there are
 - Convert Flask backend into a REST API for scalability
 - Containerize the application using Docker for deployment consistency
 
+---
+
 # Screenshots
 
 Below are sample visuals of the application interface.
 
 > Add your actual images inside a folder named `screenshots/` in your project.
 
+---
+
 ### Homepage
 
 ![Homepage](screenshots/homepage.png)
 
+---
+
 ### Prediction Result Page
 
 ![Result](screenshots/result.png)
+
+---
 
 # How to Run the Project
 
