@@ -1,3 +1,4 @@
+# -----------------------------
 # IMPORTS
 # -----------------------------
 from flask import Flask, request
@@ -5,16 +6,19 @@ import pickle
 import pandas as pd
 import os
 
-# APP INITIALIZATION
+# -----------------------------
+# APP INIT
 # -----------------------------
 app = Flask(__name__)
 
+# -----------------------------
 # LOAD MODEL SAFELY
 # -----------------------------
 model_path = os.path.join(os.path.dirname(__file__), "model.pkl")
 model = pickle.load(open(model_path, "rb"))
 
-# HTML FORM PAGE
+# -----------------------------
+# HTML FORM
 # -----------------------------
 html_form = """
 <!DOCTYPE html>
@@ -65,18 +69,12 @@ html_form = """
         input[type="submit"]:hover {
             background: #2a5298;
         }
-
-        label {
-            font-size: 14px;
-            color: #333;
-        }
     </style>
 </head>
 
 <body>
 
 <div class="container">
-
     <h2>Customer Churn Prediction</h2>
 
     <form method="POST" action="/predict">
@@ -106,26 +104,28 @@ html_form = """
 
         <input type="submit" value="Predict Churn">
     </form>
-
 </div>
 
 </body>
 </html>
 """
 
+# -----------------------------
 # HOME ROUTE
 # -----------------------------
 @app.route('/')
 def home():
     return html_form
 
-# PREDICTION ROUTE
+# -----------------------------
+# PREDICT ROUTE
 # -----------------------------
 @app.route('/predict', methods=['POST'])
 def predict():
 
-    # INPUT HANDLING
-    # -----------------------------
+    # -------------------------
+    # GET INPUT
+    # -------------------------
     try:
         tenure = int(request.form['tenure'])
         monthly_charges = float(request.form['monthly_charges'])
@@ -136,41 +136,33 @@ def predict():
     contract_type = request.form['contract_type']
     internet_service = request.form['internet_service']
 
-    # ENCODING
-    # -----------------------------
-    contract_map = {
-        "Month-to-month": 0,
-        "One year": 1,
-        "Two year": 2
-    }
+    # -------------------------
+    # CREATE DATAFRAME (RAW)
+    # -------------------------
+    input_df = pd.DataFrame([{
+        "tenure": tenure,
+        "monthly_charges": monthly_charges,
+        "total_charges": total_charges,
+        "contract_type": contract_type,
+        "internet_service": internet_service
+    }])
 
-    internet_map = {
-        "DSL": 0,
-        "Fiber optic": 1,
-        "No": 2
-    }
+    # -------------------------
+    # ONE HOT ENCODING (MATCH TRAINING)
+    # -------------------------
+    model_input = pd.get_dummies(input_df)
 
-    contract_encoded = contract_map.get(contract_type, 0)
-    internet_encoded = internet_map.get(internet_service, 0)
+    # ALIGN WITH TRAINING COLUMNS (VERY IMPORTANT)
+    model_input = model_input.reindex(columns=model.feature_names_in_, fill_value=0)
 
-    # MODEL INPUT
-    # -----------------------------
-    input_data = [
-        tenure,
-        monthly_charges,
-        total_charges,
-        contract_encoded,
-        internet_encoded
-    ]
-
-    model_input = pd.DataFrame([input_data])
-
+    # -------------------------
     # PREDICTION
-    # -----------------------------
+    # -------------------------
     prediction = model.predict(model_input)[0]
 
-    # INSIGHTS
-    # -----------------------------
+    # -------------------------
+    # BUSINESS INSIGHTS
+    # -------------------------
     suggestions = []
 
     if tenure < 12:
@@ -180,18 +172,18 @@ def predict():
         suggestions.append("High monthly charges increase churn risk.")
 
     if contract_type == "Month-to-month":
-        suggestions.append("Month-to-month contracts have higher churn risk.")
+        suggestions.append("Month-to-month contracts increase churn risk.")
 
     if internet_service == "Fiber optic":
         suggestions.append("Fiber optic customers often show higher churn.")
 
     suggestion_html = "<ul>" + "".join(f"<li>{s}</li>" for s in suggestions) + "</ul>"
 
-    # RESULT LOGIC
-    # -----------------------------
+    # -------------------------
+    # RESULT
+    # -------------------------
     if prediction == 1:
         result = "Customer is likely to CHURN"
-
         recommendation = """
         <ul>
             <li>Offer discounts or loyalty rewards</li>
@@ -201,7 +193,6 @@ def predict():
         """
     else:
         result = "Customer is NOT likely to churn"
-
         recommendation = """
         <ul>
             <li>Customer is stable</li>
@@ -210,14 +201,13 @@ def predict():
         </ul>
         """
 
-    # RESULT PAGE HTML
-    # -----------------------------
+    # -------------------------
+    # RESULT PAGE
+    # -------------------------
     return f"""
-    <!DOCTYPE html>
     <html>
     <head>
         <title>Prediction Result</title>
-
         <style>
             body {{
                 font-family: Arial;
@@ -248,7 +238,6 @@ def predict():
 
             p, li {{
                 font-size: 16px;
-                line-height: 1.6;
                 color: #333;
             }}
 
@@ -260,17 +249,11 @@ def predict():
                 color: white;
                 text-decoration: none;
                 border-radius: 6px;
-                font-weight: bold;
-            }}
-
-            .button:hover {{
-                background: #2a5298;
             }}
         </style>
     </head>
 
     <body>
-
         <div class="container">
 
             <h1>{result}</h1>
@@ -281,15 +264,15 @@ def predict():
             <h3>Recommendations</h3>
             {recommendation}
 
-            <a href="/" class="button">Try Again</a>
+            <a class="button" href="/">Try Again</a>
 
         </div>
-
     </body>
     </html>
     """
-
+    
+# -----------------------------
 # RUN APP
 # -----------------------------
 if __name__ == "__main__":
-    app.run(host="127.0.0.1", port=5001, debug=True)
+    app.run(host="0.0.0.0", port=5001, debug=True)
