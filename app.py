@@ -41,7 +41,7 @@ html_form = """
             background: white;
             padding: 40px;
             border-radius: 12px;
-            width: 400px;
+            width: 420px;
             box-shadow: 0px 10px 25px rgba(0,0,0,0.2);
         }
 
@@ -75,18 +75,39 @@ html_form = """
 <body>
 
 <div class="container">
+
     <h2>Customer Churn Prediction</h2>
+
+    <!-- INSTRUCTIONS SECTION -->
+    <div style="margin-bottom:15px; font-size:13px; color:#555;">
+        <b>Instructions:</b><br>
+        Enter customer details to predict churn risk.<br>
+        Example ranges:<br>
+        Tenure: 1–72 months<br>
+        Monthly Charges: 20–120<br>
+        Total Charges: 20–8000
+    </div>
+
+    <!--  EXAMPLE CUSTOMER -->
+    <div style="font-size:12px; margin-bottom:15px; color:#777;">
+        <b>Example high-risk customer:</b><br>
+        Tenure: 2<br>
+        Monthly Charges: 95<br>
+        Total Charges: 190<br>
+        Contract: Month-to-month<br>
+        Internet: Fiber optic
+    </div>
 
     <form method="POST" action="/predict">
 
         <label>Tenure</label>
-        <input name="tenure" type="number" required>
+        <input name="tenure" type="number" value="12" required>
 
         <label>Monthly Charges</label>
-        <input name="monthly_charges" type="number" required>
+        <input name="monthly_charges" type="number" value="70" required>
 
         <label>Total Charges</label>
-        <input name="total_charges" type="number" required>
+        <input name="total_charges" type="number" value="1000" required>
 
         <label>Contract Type</label>
         <select name="contract_type">
@@ -104,6 +125,7 @@ html_form = """
 
         <input type="submit" value="Predict Churn">
     </form>
+
 </div>
 
 </body>
@@ -118,14 +140,11 @@ def home():
     return html_form
 
 # -----------------------------
-# PREDICT ROUTE
+# PREDICT ROUTE (SAFE)
 # -----------------------------
 @app.route('/predict', methods=['POST'])
 def predict():
 
-    # -------------------------
-    # GET INPUT
-    # -------------------------
     try:
         tenure = int(request.form['tenure'])
         monthly_charges = float(request.form['monthly_charges'])
@@ -136,78 +155,51 @@ def predict():
     contract_type = request.form['contract_type']
     internet_service = request.form['internet_service']
 
-    # -------------------------
-    # CREATE DATAFRAME (RAW)
-    # -------------------------
-    input_df = pd.DataFrame([{
-        "tenure": tenure,
-        "monthly_charges": monthly_charges,
-        "total_charges": total_charges,
-        "contract_type": contract_type,
-        "internet_service": internet_service
-    }])
+    # -----------------------------
+    # ENCODING (must match training)
+    # -----------------------------
+    contract_map = {
+        "Month-to-month": 0,
+        "One year": 1,
+        "Two year": 2
+    }
 
-    # -------------------------
-    # ONE HOT ENCODING (MATCH TRAINING)
-    # -------------------------
-    model_input = pd.get_dummies(input_df)
+    internet_map = {
+        "DSL": 0,
+        "Fiber optic": 1,
+        "No": 2
+    }
 
-    # ALIGN WITH TRAINING COLUMNS (VERY IMPORTANT)
-    model_input = model_input.reindex(columns=model.feature_names_in_, fill_value=0)
+    input_data = [
+        tenure,
+        monthly_charges,
+        total_charges,
+        contract_map.get(contract_type, 0),
+        internet_map.get(internet_service, 0)
+    ]
 
-    # -------------------------
+    model_input = pd.DataFrame([input_data])
+
+    # -----------------------------
     # PREDICTION
-    # -------------------------
+    # -----------------------------
     prediction = model.predict(model_input)[0]
 
-    # -------------------------
-    # BUSINESS INSIGHTS
-    # -------------------------
-    suggestions = []
-
-    if tenure < 12:
-        suggestions.append("Low tenure increases churn risk.")
-
-    if monthly_charges > 80:
-        suggestions.append("High monthly charges increase churn risk.")
-
-    if contract_type == "Month-to-month":
-        suggestions.append("Month-to-month contracts increase churn risk.")
-
-    if internet_service == "Fiber optic":
-        suggestions.append("Fiber optic customers often show higher churn.")
-
-    suggestion_html = "<ul>" + "".join(f"<li>{s}</li>" for s in suggestions) + "</ul>"
-
-    # -------------------------
+    # -----------------------------
     # RESULT
-    # -------------------------
+    # -----------------------------
     if prediction == 1:
         result = "Customer is likely to CHURN"
-        recommendation = """
-        <ul>
-            <li>Offer discounts or loyalty rewards</li>
-            <li>Promote long-term contracts</li>
-            <li>Improve customer engagement</li>
-        </ul>
-        """
     else:
         result = "Customer is NOT likely to churn"
-        recommendation = """
-        <ul>
-            <li>Customer is stable</li>
-            <li>Maintain service quality</li>
-            <li>Monitor pricing changes</li>
-        </ul>
-        """
 
-    # -------------------------
-    # RESULT PAGE
-    # -------------------------
+    # -----------------------------
+    # RETURN PAGE
+    # -----------------------------
     return f"""
     <html>
     <head>
-        <title>Prediction Result</title>
+        <title>Result</title>
         <style>
             body {{
                 font-family: Arial;
@@ -223,22 +215,13 @@ def predict():
                 background: white;
                 padding: 40px;
                 border-radius: 12px;
-                width: 650px;
+                width: 500px;
+                text-align: center;
                 box-shadow: 0px 10px 25px rgba(0,0,0,0.2);
             }}
 
             h1 {{
                 color: #1e3c72;
-                text-align: center;
-            }}
-
-            h3 {{
-                color: #2a5298;
-            }}
-
-            p, li {{
-                font-size: 16px;
-                color: #333;
             }}
 
             .button {{
@@ -258,19 +241,13 @@ def predict():
 
             <h1>{result}</h1>
 
-            <h3>Insights</h3>
-            {suggestion_html}
-
-            <h3>Recommendations</h3>
-            {recommendation}
-
-            <a class="button" href="/">Try Again</a>
+            <a href="/" class="button">Try Again</a>
 
         </div>
     </body>
     </html>
     """
-    
+
 # -----------------------------
 # RUN APP
 # -----------------------------
