@@ -137,6 +137,7 @@ html_form = """
 def home():
     return html_form
 
+
 @app.route('/predict', methods=['POST'])
 def predict():
 
@@ -154,7 +155,7 @@ def predict():
     internet_service = request.form['internet_service']
 
     # -----------------------------
-    # BUILD DATAFRAME (RAW INPUT)
+    # CREATE DATAFRAME
     # -----------------------------
     input_df = pd.DataFrame([{
         "tenure": tenure,
@@ -170,7 +171,7 @@ def predict():
     model_input = pd.get_dummies(input_df)
 
     # -----------------------------
-    # ALIGN WITH TRAINING FEATURES (CRITICAL FIX)
+    # ALIGN FEATURES (CRITICAL FIX)
     # -----------------------------
     model_input = model_input.reindex(columns=model.feature_names_in_, fill_value=0)
 
@@ -179,10 +180,49 @@ def predict():
     # -----------------------------
     prediction = model.predict(model_input)[0]
 
-    result = "Customer is likely to CHURN" if prediction == 1 else "Customer is NOT likely to churn"
+    # -----------------------------
+    # BUSINESS INSIGHTS (ADDED BACK)
+    # -----------------------------
+    suggestions = []
+
+    if tenure < 12:
+        suggestions.append("Low tenure increases churn risk.")
+
+    if monthly_charges > 80:
+        suggestions.append("High monthly charges increase churn risk.")
+
+    if contract_type == "Month-to-month":
+        suggestions.append("Month-to-month contracts increase churn risk.")
+
+    if internet_service == "Fiber optic":
+        suggestions.append("Fiber optic customers often show higher churn.")
+
+    suggestion_html = "<ul>" + "".join(f"<li>{s}</li>" for s in suggestions) + "</ul>"
 
     # -----------------------------
-    # RETURN HTML
+    # RESULT LOGIC
+    # -----------------------------
+    if prediction == 1:
+        result = "Customer is likely to CHURN"
+        recommendation = """
+        <ul>
+            <li>Offer discounts or loyalty rewards</li>
+            <li>Promote long-term contracts</li>
+            <li>Improve customer engagement</li>
+        </ul>
+        """
+    else:
+        result = "Customer is NOT likely to churn"
+        recommendation = """
+        <ul>
+            <li>Customer is stable</li>
+            <li>Maintain service quality</li>
+            <li>Monitor pricing changes</li>
+        </ul>
+        """
+
+    # -----------------------------
+    # RESULT PAGE
     # -----------------------------
     return f"""
     <html>
@@ -203,13 +243,22 @@ def predict():
                 background: white;
                 padding: 40px;
                 border-radius: 12px;
-                width: 500px;
+                width: 550px;
                 text-align: center;
                 box-shadow: 0px 10px 25px rgba(0,0,0,0.2);
             }}
 
             h1 {{
                 color: #1e3c72;
+            }}
+
+            h3 {{
+                color: #2a5298;
+            }}
+
+            li {{
+                font-size: 16px;
+                color: #333;
             }}
 
             .button {{
@@ -229,6 +278,12 @@ def predict():
 
             <h1>{result}</h1>
 
+            <h3>Insights</h3>
+            {suggestion_html}
+
+            <h3>Recommendations</h3>
+            {recommendation}
+
             <a href="/" class="button">Try Again</a>
 
         </div>
@@ -237,7 +292,7 @@ def predict():
     """
 
 # -----------------------------
-# RUN APP (RENDER READY)
+# RUN APP
 # -----------------------------
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
