@@ -12,13 +12,13 @@ import os
 app = Flask(__name__)
 
 # -----------------------------
-# LOAD MODEL SAFELY
+# LOAD MODEL
 # -----------------------------
 model_path = os.path.join(os.path.dirname(__file__), "model.pkl")
 model = pickle.load(open(model_path, "rb"))
 
 # -----------------------------
-# HTML FORM
+# HOME PAGE (HTML FORM)
 # -----------------------------
 html_form = """
 <!DOCTYPE html>
@@ -78,22 +78,20 @@ html_form = """
 
     <h2>Customer Churn Prediction</h2>
 
-    <!-- INSTRUCTIONS SECTION -->
-    <div style="margin-bottom:15px; font-size:13px; color:#555;">
+    <!-- Instructions -->
+    <div style="font-size:13px; color:#555; margin-bottom:10px;">
         <b>Instructions:</b><br>
-        Enter customer details to predict churn risk.<br>
-        Example ranges:<br>
         Tenure: 1–72 months<br>
         Monthly Charges: 20–120<br>
         Total Charges: 20–8000
     </div>
 
-    <!--  EXAMPLE CUSTOMER -->
-    <div style="font-size:12px; margin-bottom:15px; color:#777;">
-        <b>Example high-risk customer:</b><br>
+    <!-- Example -->
+    <div style="font-size:12px; color:#777; margin-bottom:10px;">
+        <b>Example High Risk:</b><br>
         Tenure: 2<br>
-        Monthly Charges: 95<br>
-        Total Charges: 190<br>
+        Monthly: 95<br>
+        Total: 190<br>
         Contract: Month-to-month<br>
         Internet: Fiber optic
     </div>
@@ -111,16 +109,16 @@ html_form = """
 
         <label>Contract Type</label>
         <select name="contract_type">
-            <option value="Month-to-month">Month-to-month</option>
-            <option value="One year">One year</option>
-            <option value="Two year">Two year</option>
+            <option>Month-to-month</option>
+            <option>One year</option>
+            <option>Two year</option>
         </select>
 
         <label>Internet Service</label>
         <select name="internet_service">
-            <option value="DSL">DSL</option>
-            <option value="Fiber optic">Fiber optic</option>
-            <option value="No">No</option>
+            <option>DSL</option>
+            <option>Fiber optic</option>
+            <option>No</option>
         </select>
 
         <input type="submit" value="Predict Churn">
@@ -133,18 +131,18 @@ html_form = """
 """
 
 # -----------------------------
-# HOME ROUTE
+# ROUTES
 # -----------------------------
 @app.route('/')
 def home():
     return html_form
 
-# -----------------------------
-# PREDICT ROUTE (SAFE)
-# -----------------------------
 @app.route('/predict', methods=['POST'])
 def predict():
 
+    # -----------------------------
+    # INPUTS
+    # -----------------------------
     try:
         tenure = int(request.form['tenure'])
         monthly_charges = float(request.form['monthly_charges'])
@@ -156,45 +154,35 @@ def predict():
     internet_service = request.form['internet_service']
 
     # -----------------------------
-    # ENCODING (must match training)
+    # BUILD DATAFRAME (RAW INPUT)
     # -----------------------------
-    contract_map = {
-        "Month-to-month": 0,
-        "One year": 1,
-        "Two year": 2
-    }
+    input_df = pd.DataFrame([{
+        "tenure": tenure,
+        "monthly_charges": monthly_charges,
+        "total_charges": total_charges,
+        "contract_type": contract_type,
+        "internet_service": internet_service
+    }])
 
-    internet_map = {
-        "DSL": 0,
-        "Fiber optic": 1,
-        "No": 2
-    }
+    # -----------------------------
+    # ONE HOT ENCODING
+    # -----------------------------
+    model_input = pd.get_dummies(input_df)
 
-    input_data = [
-        tenure,
-        monthly_charges,
-        total_charges,
-        contract_map.get(contract_type, 0),
-        internet_map.get(internet_service, 0)
-    ]
-
-    model_input = pd.DataFrame([input_data])
+    # -----------------------------
+    # ALIGN WITH TRAINING FEATURES (CRITICAL FIX)
+    # -----------------------------
+    model_input = model_input.reindex(columns=model.feature_names_in_, fill_value=0)
 
     # -----------------------------
     # PREDICTION
     # -----------------------------
     prediction = model.predict(model_input)[0]
 
-    # -----------------------------
-    # RESULT
-    # -----------------------------
-    if prediction == 1:
-        result = "Customer is likely to CHURN"
-    else:
-        result = "Customer is NOT likely to churn"
+    result = "Customer is likely to CHURN" if prediction == 1 else "Customer is NOT likely to churn"
 
     # -----------------------------
-    # RETURN PAGE
+    # RETURN HTML
     # -----------------------------
     return f"""
     <html>
@@ -249,9 +237,8 @@ def predict():
     """
 
 # -----------------------------
-# RUN APP
+# RUN APP (RENDER READY)
 # -----------------------------
 if __name__ == "__main__":
-    import os
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
