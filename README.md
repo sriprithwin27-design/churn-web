@@ -24,6 +24,14 @@ The objective was not only to build a machine learning model, but also to unders
 
 ---
 
+## 🚀 Live Deployment 
+
+🔗 Deployed App: https://churn-web-gq08.onrender.com
+
+This Flask-based machine learning application predicts customer churn using Logistic Regression. It includes a full end-to-end pipeline from data preprocessing to deployment on Render.
+
+---
+
 # Project Objectives
 
 The primary aim of this project was to understand how machine learning models can support customer retention strategies and business decision-making processes.
