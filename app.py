@@ -1,13 +1,21 @@
-from flask import Flask, request, render_template_string
+# IMPORTS
+# -----------------------------
+from flask import Flask, request
 import pickle
 import pandas as pd
+import os
 
+# APP INITIALIZATION
+# -----------------------------
 app = Flask(__name__)
 
-# Load trained model
-model = pickle.load(open("model.pkl", "rb"))
+# LOAD MODEL SAFELY
+# -----------------------------
+model_path = os.path.join(os.path.dirname(__file__), "model.pkl")
+model = pickle.load(open(model_path, "rb"))
 
-# Simple HTML form (no templates needed yet)
+# HTML FORM PAGE
+# -----------------------------
 html_form = """
 <!DOCTYPE html>
 <html>
@@ -68,6 +76,7 @@ html_form = """
 <body>
 
 <div class="container">
+
     <h2>Customer Churn Prediction</h2>
 
     <form method="POST" action="/predict">
@@ -97,145 +106,134 @@ html_form = """
 
         <input type="submit" value="Predict Churn">
     </form>
+
 </div>
 
 </body>
 </html>
 """
 
+# HOME ROUTE
+# -----------------------------
 @app.route('/')
 def home():
     return html_form
 
+# PREDICTION ROUTE
+# -----------------------------
 @app.route('/predict', methods=['POST'])
 def predict():
 
+    # INPUT HANDLING
     # -----------------------------
-    # Get form data
-    # -----------------------------
-    tenure = float(request.form['tenure'])
-    monthly = float(request.form['monthly_charges'])
-    total = float(request.form['total_charges'])
-    contract = request.form['contract_type']
-    internet = request.form['internet_service']
+    try:
+        tenure = int(request.form['tenure'])
+        monthly_charges = float(request.form['monthly_charges'])
+        total_charges = float(request.form['total_charges'])
+    except:
+        return "Invalid input"
 
-    # -----------------------------
-    # Create dataframe
-    # -----------------------------
-    input_data = pd.DataFrame([{
-        "tenure": tenure,
-        "monthly_charges": monthly,
-        "total_charges": total,
-        "contract_type": contract,
-        "internet_service": internet
-    }])
+    contract_type = request.form['contract_type']
+    internet_service = request.form['internet_service']
 
+    # ENCODING
     # -----------------------------
-    # One-hot encoding
-    # -----------------------------
-    input_data = pd.get_dummies(input_data)
+    contract_map = {
+        "Month-to-month": 0,
+        "One year": 1,
+        "Two year": 2
+    }
 
-    # -----------------------------
-    # Match training columns
-    # -----------------------------
-    model_input = pd.DataFrame(0, columns=model.feature_names_in_, index=[0])
-    model_input.update(input_data)
+    internet_map = {
+        "DSL": 0,
+        "Fiber optic": 1,
+        "No": 2
+    }
 
+    contract_encoded = contract_map.get(contract_type, 0)
+    internet_encoded = internet_map.get(internet_service, 0)
+
+    # MODEL INPUT
     # -----------------------------
-    # Prediction
+    input_data = [
+        tenure,
+        monthly_charges,
+        total_charges,
+        contract_encoded,
+        internet_encoded
+    ]
+
+    model_input = pd.DataFrame([input_data])
+
+    # PREDICTION
     # -----------------------------
     prediction = model.predict(model_input)[0]
 
-    # -----------------------------
-    # Business logic / suggestions
+    # INSIGHTS
     # -----------------------------
     suggestions = []
 
     if tenure < 12:
-        suggestions.append("Customers with very low tenure are more likely to churn.")
+        suggestions.append("Low tenure increases churn risk.")
 
-    if monthly > 80:
-        suggestions.append("High monthly charges may increase churn risk.")
+    if monthly_charges > 80:
+        suggestions.append("High monthly charges increase churn risk.")
 
-    if contract == "Month-to-month":
-        suggestions.append("Month-to-month contracts often show higher churn rates.")
+    if contract_type == "Month-to-month":
+        suggestions.append("Month-to-month contracts have higher churn risk.")
 
-    if internet == "Fiber optic":
-        suggestions.append("Fiber optic customers in telecom datasets often display higher churn behaviour.")
+    if internet_service == "Fiber optic":
+        suggestions.append("Fiber optic customers often show higher churn.")
 
+    suggestion_html = "<ul>" + "".join(f"<li>{s}</li>" for s in suggestions) + "</ul>"
+
+    # RESULT LOGIC
+    # -----------------------------
     if prediction == 1:
         result = "Customer is likely to CHURN"
 
         recommendation = """
-        Recommended Actions:
         <ul>
-            <li>Offer loyalty discounts or bundled plans</li>
+            <li>Offer discounts or loyalty rewards</li>
             <li>Promote long-term contracts</li>
-            <li>Provide proactive customer support outreach</li>
-            <li>Review pricing sensitivity</li>
+            <li>Improve customer engagement</li>
         </ul>
         """
-
     else:
         result = "Customer is NOT likely to churn"
 
         recommendation = """
-        Retention Strengths:
         <ul>
-            <li>Longer tenure improves customer stability</li>
-            <li>Balanced pricing reduces churn probability</li>
-            <li>Long-term contracts improve retention</li>
-            <li>Customer profile appears relatively stable</li>
-        </ul>
-
-        <br>
-
-        <b>Potential Risk Factors That Could Increase Churn:</b>
-        <ul>
-            <li>Increasing monthly charges significantly</li>
-            <li>Reducing contract commitment</li>
-            <li>Poor customer support experience</li>
-            <li>Lower engagement over time</li>
+            <li>Customer is stable</li>
+            <li>Maintain service quality</li>
+            <li>Monitor pricing changes</li>
         </ul>
         """
 
-    # -----------------------------
-    # Convert suggestions into HTML
-    # -----------------------------
-    suggestion_html = "<ul>"
-
-    for item in suggestions:
-        suggestion_html += f"<li>{item}</li>"
-
-    suggestion_html += "</ul>"
-
-    # -----------------------------
-    # Styled result page
+    # RESULT PAGE HTML
     # -----------------------------
     return f"""
     <!DOCTYPE html>
     <html>
-
     <head>
         <title>Prediction Result</title>
 
         <style>
-
             body {{
-                font-family: Arial, sans-serif;
+                font-family: Arial;
                 background: linear-gradient(135deg, #1e3c72, #2a5298);
-                height: 100vh;
-                margin: 0;
                 display: flex;
                 justify-content: center;
                 align-items: center;
+                height: 100vh;
+                margin: 0;
             }}
 
             .container {{
                 background: white;
-                width: 650px;
                 padding: 40px;
                 border-radius: 12px;
+                width: 650px;
                 box-shadow: 0px 10px 25px rgba(0,0,0,0.2);
             }}
 
@@ -268,7 +266,6 @@ def predict():
             .button:hover {{
                 background: #2a5298;
             }}
-
         </style>
     </head>
 
@@ -278,15 +275,13 @@ def predict():
 
             <h1>{result}</h1>
 
-            <h3>Model Interpretation</h3>
-
+            <h3>Insights</h3>
             {suggestion_html}
 
-            <h3>Business Recommendations</h3>
-
+            <h3>Recommendations</h3>
             {recommendation}
 
-            <a href="/" class="button">Try Another Prediction</a>
+            <a href="/" class="button">Try Again</a>
 
         </div>
 
@@ -294,6 +289,7 @@ def predict():
     </html>
     """
 
-
+# RUN APP
+# -----------------------------
 if __name__ == "__main__":
     app.run(host="127.0.0.1", port=5001, debug=True)
